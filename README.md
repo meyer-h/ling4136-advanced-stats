@@ -1,2 +1,18 @@
-# ling4136-advanced-stats
-Repository for LING2136/4136 Advanced Statistics at the University of Oslo
+# README LING2136/4136
+
+This is the repository for the class "LING2136/4136 Advanced Statistical Methods for Language Students" at the University of Oslo, taught by Timo Roettger. The project contains all relevant course materials for the class introducing core concepts related to linear mixed effects models, Bayesian inference and meaningful hypothesis testing.
+
+-   `data/` contains the data set that are used throughout the course materials as `.csv`\` files.
+
+    -   `data/code_books/` contains code books of all data sets, including variable names and descriptions as `.txt` files
+    -   `data/original_articles` contains `.pdf`s of corresponding original articles.
+
+-   `exercises/` contains exercises for in-class activities (mostly as `.qmd` files) alongside solutions under `exercises/solutions/`.
+
+-   `homework/` contains exercises for homework activities (mostly as `.qmd` files) alongside solutions under `homework/solutions/`.
+
+-   `models/` contains stored models to speed up some exercises, circumventing recompilation.
+
+-   `slides/` contains `.pdf` of in-class presentations
+
+Last updated: 2026-01-22 by Timo Roettger
