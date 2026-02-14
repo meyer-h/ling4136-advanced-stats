@@ -102,7 +102,7 @@ Build that model with the appropriate random effect structure, taking into accou
 
 # Note to self: Figure out how to interpret this
 # If unsure, remove scale(order) and scale(age) (or just one and
-# leave the other to be without scale()?
+# leave the other to be without scale()??
 xmdl <- glmer(
   chosen_voicing ~ 
     correct_voicing +
