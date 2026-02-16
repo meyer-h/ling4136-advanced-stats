@@ -87,27 +87,15 @@ Build that model with the appropriate random effect structure, taking into accou
 ```{r}
 #| label: glmer_incomplete
 
-# *order* and *age* (without *scale()* gave the following wardning:
-#    Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv,  :
-#    Model is nearly unidentifiable: very large eigenvalue
-#     - Rescale variables?;Model is nearly unidentifiable: large eigenvalue ratio
-#     - Rescale variables?
-# The following showed article showed that scale() can be used to optimize
-# https://stat.ethz.ch/CRAN/web/packages/lme4/vignettes/autoscale.html?
-# 
+
+ 
 # Family is binomial because chosen_voicing is a factor with two features
 # Note that there might be an effect of *order* that differs per listener,
 # but, as *order* is continuous, and random effects have to be categorical
 # these were not included.
-
-# Note to self: Figure out how to interpret this
-# If unsure, remove scale(order) and scale(age) (or just one and
-# leave the other to be without scale()??
 xmdl <- glmer(
   chosen_voicing ~ 
     correct_voicing +
-    scale(order) +
-    scale(age) +
     (1 + correct_voicing | listener) +
     (1 + correct_voicing | item_pair) +
     (1 + correct_voicing | voice),
