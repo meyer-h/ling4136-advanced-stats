@@ -130,7 +130,19 @@ anova(xmdl_null, xmdl)
 
 #### Interpretation
 
-The model predicts that the log odds of choosing (*chosen_voicing*) *voiced*
+```{r}
+#| label: probability_conversion
+
+# Using plogis to calculate probability from logarithmic odds
+plogis(-0.02359) # (Intercept)
+plogis(0.52332) # correct_voicingvoiceless
+```
+
+The model predicts that the logarithmic odds of choosing (*chosen_voicing*) *voiced* when the stimuli (*correct_voicing*) was *voiced* was \~-0.024. Converting this to probability shows that participants chose *voiced* when the stimuli was *voiced* about 49% of the time. This is fairy close to a 50/50 chance split, which is also reflected in a p-value of \~0.934.
+
+Further, it predicts that the logarithmic odds of choosing *voiced* when the stimuli was *voiceless* was \~0.523. Probability-wise this predicts this choice to happen about 63% of the time. P value?
+
+Comparing the model to the null-model shows that the effect of the stimuli (*correct_voicing*) is a significant improvement (p-value of \~0.004) on its prediction.
 
 ### (C) Plot predictions
 
