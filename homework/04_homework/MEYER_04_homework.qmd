@@ -134,15 +134,25 @@ anova(xmdl_null, xmdl)
 #| label: probability_conversion
 
 # Using plogis to calculate probability from logarithmic odds
-plogis(-0.02359) # (Intercept)
-plogis(0.52332) # correct_voicingvoiceless
+plogis(c(
+  -0.02359,           # (Intercept)
+  0.52332            # correct_voicingvoiceless
+))
 ```
 
 The model predicts that the logarithmic odds of choosing (*chosen_voicing*) *voiced* when the stimuli (*correct_voicing*) was *voiced* was \~-0.024. Converting this to probability shows that participants chose *voiced* when the stimuli was *voiced* about 49% of the time. This is fairy close to a 50/50 chance split, which is also reflected in a p-value of \~0.934.
 
-Further, it predicts that the logarithmic odds of choosing *voiced* when the stimuli was *voiceless* was \~0.523. Probability-wise this predicts this choice to happen about 63% of the time. P value?
+Further, it predicts that the logarithmic odds of choosing *voiced* when the stimuli was *voiceless* was changes  by \~0.523. Probability-wise this predicts this choice to happen about 63% of the time. This is likely significant (p-value of \~0.002), and implies that the category of stimuli affects the responses from participants. 
 
 Comparing the model to the null-model shows that the effect of the stimuli (*correct_voicing*) is a significant improvement (p-value of \~0.004) on its prediction.
+
+For random effects it seems that the odds of a participant choosing *voiced* varied with the speakers voice (*voice*) with a standard deviation of \~0.903 when the stimulus is *voiced*. This means that some speakers voices made participants lean more toward *voiced* and others toward *voiceless*. The effect of the stimulus was also affected differently for each speakers voice (standard deviation of \~0.451), indicating that some speakers voices changed participants odds of choosing *voiced* more than others when the stimulus went from *voiced* to *voiceless*.
+
+The odds of choosing *voiced* also varied for the pairs of words (*word pair*) when the stimulus was *voiced* (standard deviation of \~0.790), indicating that some pairs made participants lean more toward *voiced* and some more toward *voiceless*. The slope with stimulus also varied here (standard deviation of \~ 0.495), indicating that some pairs made participants more likely to choose *voiced* when the stimulus went from *voiced* to *voiceless*.
+
+The effect of the participant (*listener*) was comparatively much smaller. The intercept had a standard deviation of \~0.191 when the stimulus was *voiced*, indicating that the difference in baseline was small. Some difference (standard deviation of \~0.183) was also seen when the stimulus went from *voiced* to *voiceless*, but, again, small in comparison.
+
+In conclusion we can see that the variability was larger for elements related to the stimulus, and less varied by participants. Participants were more likely to choose *voiced* when the stimulus was *voiceless*.
 
 ### (C) Plot predictions
 
@@ -153,7 +163,38 @@ Estimating variance components for linear mixed effects models is mathematically
 ```{r}
 #| label: plot_prediction_in
 
-# YOUR CODE HERE
+#Generating predictions for *correct_voicing* with *predict_response()*
+predictions <- predict_response(
+  xmdl,
+  terms = "correct_voicing"
+)
+
+# Making plot using the predictions
+plot_predictions <- 
+  predictions %>% 
+  ggplot(
+    aes(
+      x = x,
+      y = predicted
+    )
+  )+
+  geom_point()+
+  geom_errorbar(
+    aes(
+      ymin = conf.low, 
+      ymax = conf.high
+    )
+  )+
+  labs(
+    x = "Correct Voice",
+    y = "Predicted likelyhood of choosing *voiced*",
+    title = "Predictions (+ 95% CI)"
+  )+
+  theme_minimal()
+
+
+# Displaying plot
+plot_predictions
 
 ```
 
