@@ -88,11 +88,8 @@ Build that model with the appropriate random effect structure, taking into accou
 #| label: glmer_incomplete
 
 
- 
+# Fitting a model to predict *chosen_voicing* based on *correct_voicing*
 # Family is binomial because chosen_voicing is a factor with two features
-# Note that there might be an effect of *order* that differs per listener,
-# but, as *order* is continuous, and random effects have to be categorical
-# these were not included.
 xmdl <- glmer(
   chosen_voicing ~ 
     correct_voicing +
@@ -102,6 +99,9 @@ xmdl <- glmer(
   data = incomplete,
   family = binomial
 )
+
+# Displaying a summary of the model
+summary(xmdl)
 ```
 
 ### (B) Interpret the model output
@@ -111,9 +111,26 @@ Interpret the model coefficients and calculate p-values for the relevant predict
 ```{r}
 #| label: interpretation
 
-# YOUR CODE HERE
+# Calculating p-values by comparing it to the null model
+# Making a null-model
 
+xmdl_null <- glmer(
+  chosen_voicing ~ 
+    1 +
+    (1 + correct_voicing | listener) +
+    (1 + correct_voicing | item_pair) +
+    (1 + correct_voicing | voice),
+  data = incomplete,
+  family = binomial
+)
+
+# Comparing the models with an ANOVA analysis
+anova(xmdl_null, xmdl)
 ```
+
+#### Interpretation
+
+The model predicts that the log odds of choosing (*chosen_voicing*) *voiced*
 
 ### (C) Plot predictions
 
