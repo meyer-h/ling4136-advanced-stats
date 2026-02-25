@@ -63,7 +63,34 @@ Let's visualize the raw `Distance` distribution for both `Sem` categories making
 ```{r}
 #| label: show_overall_distribution
 
-# YOUR CODE HERE
+# Checking for NA's
+sim[
+  rowSums(
+    is.na(sim)
+    ) > 0,
+  ]
+
+# Plotting a density plot
+# Removing the single NA from the plot
+plot_distribution <- sim %>% 
+  filter(
+    !is.na(Distance)
+    ) %>% 
+  ggplot(
+    aes(
+      x = Distance
+    )
+  )+
+  geom_density()+
+  labs(
+    title = "Distribution of distance between cities",
+    x = "Distance (mm)",
+    y = "Density",
+    caption = "1 missing observation removed"
+  )+
+  theme_minimal()
+
+plot_distribution
 
 ```
 
