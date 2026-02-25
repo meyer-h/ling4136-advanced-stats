@@ -65,9 +65,7 @@ Let's visualize the raw `Distance` distribution for both `Sem` categories making
 
 # Checking for NA's
 sim[
-  rowSums(
-    is.na(sim)
-    ) > 0,
+  !complete.cases(sim),
   ]
 
 # Plotting a density plot
@@ -80,14 +78,14 @@ plot_distribution <- sim %>%
     aes(
       x = Distance
     )
-  )+
-  geom_density()+
+  ) + 
+  geom_density() + 
   labs(
-    title = "Distribution of distance between cities",
+    title = "Distribution of guessed distance between cities",
     x = "Distance (mm)",
     y = "Density",
-    caption = "1 missing observation removed"
-  )+
+    caption = "One missing observation removed"
+  ) + 
   theme_minimal()
 
 plot_distribution
@@ -125,8 +123,12 @@ Ignore for now that you might generate values that are impossible at the tails o
 ```{r}
 #| label: prior_exploration
 
-plot_normal(#YOUR PARAMETER CHOICES HERE
-  )
+# Mean is 133, which is the average distance between two random points at an a4 paper
+# SD is 70 as that is the SD for a random distribution of points
+# Minimum xlim is 0 (can't be smaller than no distance)
+# Maximum xlim is 363.9 (can't be larger than the diagonal of A4)
+plot_normal(mean = 133, sd = 70) + 
+  xlim(0, 363.9)
 
 ```
 
