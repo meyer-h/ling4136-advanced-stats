@@ -135,6 +135,9 @@ b <- 210
 # Number of point-pairs to generate
 iterations <- 1000000
 
+# Set seed to get same numbers every time
+set.seed(31)
+
 # Generate poin-pairs on the sheet
 x1 <- runif(iterations, 0, a)
 x2 <- runif(iterations, 0, b)
@@ -152,6 +155,7 @@ distance <- sqrt(
 mean_distance <- mean(distance)
 sd_distance <- sd(distance)
 
+
 # Calculating longest line in an A4 sheet
 diagonal_a4 <- sqrt(
     a^2
@@ -159,7 +163,7 @@ diagonal_a4 <- sqrt(
     b^2)
 
 # Minimum xlim is 0 (can't be smaller than no distance)
-# Maximum xlim is 363.9 (can't be larger than the diagonal of A4)
+# Maximum xlim is the longest diagonal of A4
 plot_normal(mean = mean_distance, sd = sd_distance) + 
   xlim(0, diagonal_a4)
 
@@ -172,8 +176,27 @@ Now based on your exploration, specify priors. Remember what the two coefficient
 ```{r}
 #| label: spec_priors
 
-my_priors <- #YOUR PRIORS HERE
+# Showing values for use later
+print(mean_distance)
+print(sd_distance)
 
+my_priors <- c(
+  # I predict the intercept will be the average distance I
+  # calculated between two random points and its standard deviation
+  prior(normal(145.116, 68.99123), class = "Intercept"),
+  
+  # I have few assumptions about the differences in distance between 
+  # Sem = Different and Sem = Similar, so I set the mean at 0
+  # and predict the distribution to be the same as the intercept
+  prior(normal(0, 68.99123), class = "b"),
+  
+  # I also have few insights into how individual guesses differ around
+  # the mean. Logically it cannot be negative, and it seems highly unlikely
+  # to be zero. The empirical rule tells me that 68% of data should
+  # fall within a standard deviation, so I will use that as a mean for
+  # the variation. Nor do I have any indication about how this distribution
+  # will spread, so I assume a standard variation here aswell.
+  prior(normal(68.99123, 68.99123), class = "sigma"))
 ```
 
 # (D) Run a prior predictive check
@@ -185,7 +208,7 @@ Add your priors to the model below. We will run the model and sample only from o
 
 xmdl_prior <- brm(Distance ~ Sem,
             family = gaussian(),
-            #prior = #YOUR PRIORS HERE
+            prior = my_priors,
             sample_prior = "only",
             data = sim,
             seed = 42)
