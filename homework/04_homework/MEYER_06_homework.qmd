@@ -240,7 +240,23 @@ If you are happy with your priors, run the full model and plot the posteriors ju
 ```{r}
 #| label: model_posteriors
 
-# YOUR CODE HERE
+# Full model (removed sample_prior = "only",)
+xmdl <- brm(Distance ~ Sem,
+            family = gaussian(),
+            prior = my_priors,
+            data = sim,
+            seed = 42)
+
+#Making plot
+xmdl %>%  
+  spread_draws(b_Intercept, b_SemSimilar) %>% 
+  mutate(Different = b_Intercept,
+         Similar = b_Intercept + b_SemSimilar) %>% 
+  select(Different, Similar) %>%  
+  pivot_longer(everything(), names_to = "Sem", values_to = "Distance") %>% 
+  ggplot(aes(x = Distance, fill = Sem)) +
+    geom_density() +
+    facet_wrap(Sem ~ .)
 
 ```
 
@@ -272,7 +288,13 @@ Describe whether the data (dark line) and the posterior samples (light blue line
 
 pp_check(xmdl, ndraws = 100)
 
-# YOUR ASSESSMENT HERE
+# They do seem to mainly line up. The mean of most of the posterior samples
+# seem to be a bit more right-shifted, but not by much. This might indicate
+# that my randomly generating point prior was a bit high, or that the 
+# simplifications I did were not completely right as lessening the area
+# to the areas within the map would likely lessen the mean distance. The data also
+# signal a narrower curve. I suspect some of the mismatch has to do with
+# my assumption of the spread in my prior being a bit wide.
 
 ```
 
