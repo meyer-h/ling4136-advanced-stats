@@ -123,12 +123,45 @@ Ignore for now that you might generate values that are impossible at the tails o
 ```{r}
 #| label: prior_exploration
 
-# Mean is 133, which is the average distance between two random points at an a4 paper
-# SD is 70 as that is the SD for a random distribution of points
+# I assume that any place within the "land" area of the map used in the experiment
+# is equally likely. However, the map is irregular and not in a format that lends
+# itself to calculating this. As a simplified measure I calculate the average
+# distance between two random points on an A4 sheet of paper.
+
+# A4 dimentions
+a <- 297
+b <- 210
+
+# Number of point-pairs to generate
+iterations <- 1000000
+
+# Generate poin-pairs on the sheet
+x1 <- runif(iterations, 0, a)
+x2 <- runif(iterations, 0, b)
+y1 <- runif(iterations, 0, a)
+y2 <- runif(iterations, 0, b)
+
+# Euclidean distance formula 
+# (https://www.geeksforgeeks.org/maths/euclidean-distance/)
+distance <- sqrt(
+    (x2 - x1)^2
+    +
+    (y2 - y1)^2)
+
+# Calculating mean and standard deviation of simplified assumption
+mean_distance <- mean(distance)
+sd_distance <- sd(distance)
+
+# Calculating longest line in an A4 sheet
+diagonal_a4 <- sqrt(
+    a^2
+    +
+    b^2)
+
 # Minimum xlim is 0 (can't be smaller than no distance)
 # Maximum xlim is 363.9 (can't be larger than the diagonal of A4)
-plot_normal(mean = 133, sd = 70) + 
-  xlim(0, 363.9)
+plot_normal(mean = mean_distance, sd = sd_distance) + 
+  xlim(0, diagonal_a4)
 
 ```
 
