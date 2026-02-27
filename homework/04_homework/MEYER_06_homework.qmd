@@ -305,9 +305,19 @@ Can you fix the mismatch between the observed data (dark blue line) and the simu
 ```{r}
 #| label: transform
 
-# YOUR CODE HERE
+# Testing whether my assumtion that Distance is normally distributed is wrong
+# by running the model with a log(Distance)
+
+xmdl_log_distance <- brm(log(Distance) ~ Sem,
+                         family = gaussian(),
+                         prior = my_priors,
+                         data = sim,
+                         seed = 42)
+
+pp_check(xmdl_log_distance, ndraws = 100)
 
 ```
+This looks worse to me. I suspect there is some transform that can be done to Distance, as it is likely skewed a bit, but log-transforming does not seem to be it.
 
 # OPTIONAL (G) specify priors that will reduce the effect of SEM to zero
 
@@ -316,6 +326,19 @@ Now I want you to specify priors that will dominate the posterior, i.e. they wil
 ```{r}
 #| label: too-strict_priors
 
-# YOUR CODE HERE
+# Changing my prior of the coefficient to not have any spread
+my_priors_limited <- c(
+  prior(normal(145.116, 68.99123), class = "Intercept"),
+  prior(normal(0, 0.1), class = "b"),
+  prior(normal(68.99123, 68.99123), class = "sigma"))
 
+# Running a model on this prior
+xmdl_limited <- brm(Distance ~ Sem,
+                    family = gaussian(),
+                    prior = my_priors_limited,
+                    data = sim,
+                    seed = 42)
+
+# Checking that the model reduces the effect of difference in Sem to zero
+summary(xmdl_limited)
 ```
