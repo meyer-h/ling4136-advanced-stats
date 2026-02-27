@@ -317,6 +317,7 @@ xmdl_log_distance <- brm(log(Distance) ~ Sem,
 pp_check(xmdl_log_distance, ndraws = 100)
 
 ```
+
 This looks worse to me. I suspect there is some transform that can be done to Distance, as it is likely skewed a bit, but log-transforming does not seem to be it.
 
 # OPTIONAL (G) specify priors that will reduce the effect of SEM to zero
