@@ -1,0 +1,344 @@
+---
+title: "session06 - homework"
+format: html
+editor: visual
+date: 2025-12-17
+author: Timo Roettger
+execute:
+  error: false
+  warning: false
+  message: false
+  cache: true
+---
+
+# Preamble: Loading packages and configuration
+
+```{r}
+#| label: data_libraries
+#| echo: false
+
+# function to ignoring the setting of the relative path below when knitting
+run_if_not_knitting <- function(expr) {
+  if (!isTRUE(getOption("knitr.in.progress"))) {
+    eval(expr)
+  }
+}
+
+# nifty code using the pacman package
+# it checks if the packages specified below are installed, if not, they will be installed, if yes, they will be loaded
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(rstudioapi, tidyverse, tidybayes, brms, bayesrules)
+
+# set the current working directory to the one where this file is
+run_if_not_knitting(current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path))
+run_if_not_knitting(setwd(current_working_dir))
+
+# options to increase efficiency of brms models (optional)
+options(brms.backend = "cmdstanr")
+options(mc.cores = parallel::detectCores())
+
+```
+
+# Introduction
+
+We will be analyzing the data from the following article:
+
+Winter, B., & Matlock, T. (2013). Making judgments based on similarity and proximity. Metaphor and Symbol, 28(4), 219-232.
+
+```{r}
+#| label: preprocessing
+
+# Load our datasets
+# Added ../ As I moved file into the /homework/ folder
+sim <- read_csv("../../data/linguistic_similarity.csv")
+
+```
+
+In this study, they investigated the conceptual structure of the metaphor “SIMILARITY IS PROXIMITY.” They did a series of experiments in which they investigated whether participants judge entities to be closer to each other when they are thought to be more similar. They presented participants with descriptions of two cities. These cities either sounded similarly or they sounded differently (`Phon`). Moreover, the descriptions depicted the cities as either semantically similar or different (`Sem`). After reading both descriptions and seeing both names, participant had to draw into a map and had to randomly guess where these two cities are located. The authors measured the `Distance` between the two cities for each participant in millimeters.
+
+# (A) Descriptive statistics and data visualization
+
+Let's visualize the raw `Distance` distribution for both `Sem` categories making a density plot of it and describe the distributions.
+
+```{r}
+#| label: show_overall_distribution
+
+# Checking for NA's
+sim[
+  !complete.cases(sim),
+  ]
+
+# Plotting a density plot
+# Removing the single NA from the plot
+plot_distribution <- sim %>% 
+  filter(
+    !is.na(Distance)
+    ) %>% 
+  ggplot(
+    aes(
+      x = Distance
+    )
+  ) + 
+  geom_density() + 
+  labs(
+    title = "Distribution of guessed distance between cities",
+    x = "Distance (mm)",
+    y = "Density",
+    caption = "One missing observation removed"
+  ) + 
+  theme_minimal()
+
+plot_distribution
+
+```
+
+# (B) Think about priors
+
+The researchers are interested in whether semantic similarity between the cities affects how close/far apart participants draw the cities, which we can model with the following formula:
+
+```{r}
+#| label: model_formula
+
+mdl_formula = bf(Distance ~ Sem)
+
+```
+
+Use the `get_prior()` function and add `mdl_formula` as its first argument and the `sim` dataset as its second. This will give you a list of parameters that the model will estimate and will need a prior for.
+
+```{r}
+#| label: get_prior
+
+get_prior(mdl_formula, sim) 
+
+```
+
+Generally, every coefficient of our model corresponds to one parameter under the class `b`, except for the `Intercept` which is its own class. So we have a prior for the `Intercept` of the linear model and a prior for the coefficient `SemSimilar`. Priors of class `b` for our predictors always receive a flat uniform prior by default if you do not specify it otherwise. The default prior for the `Intercept` is data driven and uses a student-t distributions that covers most of the data. We also have a prior for `sigma` which is the residual variance and again is by default assigned a student-t prior informed by the variance in the data.
+
+Now I want you to specify normally distributed priors which respect the following knowledge we have: Participants needed to draw the cities on a map on a piece of din-A4 paper. The furthest two points on the map where 214 mm apart.
+
+Your task: First use the `plot_normal()` function to find a normal distribution that covers reasonable Distance values under the above described assumptions of the experiment.
+
+Ignore for now that you might generate values that are impossible at the tails of the distribution.
+
+```{r}
+#| label: prior_exploration
+
+# I assume that any place within the "land" area of the map used in the experiment
+# is equally likely. However, the map is irregular and not in a format that lends
+# itself to calculating this. As a simplified measure I calculate the average
+# distance between two random points on an A4 sheet of paper.
+
+# A4 dimentions
+a <- 297
+b <- 210
+
+# Number of point-pairs to generate
+iterations <- 1000000
+
+# Set seed to get same numbers every time
+set.seed(31)
+
+# Generate poin-pairs on the sheet
+x1 <- runif(iterations, 0, a)
+x2 <- runif(iterations, 0, b)
+y1 <- runif(iterations, 0, a)
+y2 <- runif(iterations, 0, b)
+
+# Euclidean distance formula 
+# (https://www.geeksforgeeks.org/maths/euclidean-distance/)
+distance <- sqrt(
+    (x2 - x1)^2
+    +
+    (y2 - y1)^2)
+
+# Calculating mean and standard deviation of simplified assumption
+mean_distance <- mean(distance)
+sd_distance <- sd(distance)
+
+
+# Calculating longest line in an A4 sheet
+diagonal_a4 <- sqrt(
+    a^2
+    +
+    b^2)
+
+# Minimum xlim is 0 (can't be smaller than no distance)
+# Maximum xlim is the longest diagonal of A4
+plot_normal(mean = mean_distance, sd = sd_distance) + 
+  xlim(0, diagonal_a4)
+
+```
+
+# (C) Specify priors
+
+Now based on your exploration, specify priors. Remember what the two coefficients `Intercept` and `SemSimilar` mean: `Intercept` reflects the average Distance measure for `Sem = Different`, and `SemSimilar` reflects the estimated difference between the Intercept and `Sem = Similar`. Define a prior that assumes normally distributed Distance measures somewhere in the middle of the map for both conditions:
+
+```{r}
+#| label: spec_priors
+
+# Showing values for use later
+print(mean_distance)
+print(sd_distance)
+
+my_priors <- c(
+  # I predict the intercept will be the average distance I
+  # calculated between two random points and its standard deviation
+  prior(normal(145.116, 68.99123), class = "Intercept"),
+  
+  # I have few assumptions about the differences in distance between 
+  # Sem = Different and Sem = Similar, so I set the mean at 0
+  # and predict the distribution to be the same as the intercept
+  prior(normal(0, 68.99123), class = "b"),
+  
+  # I also have few insights into how individual guesses differ around
+  # the mean. Logically it cannot be negative, and it seems highly unlikely
+  # to be zero. The empirical rule tells me that 68% of data should
+  # fall within a standard deviation, so I will use that as a mean for
+  # the variation. Nor do I have any indication about how this distribution
+  # will spread, so I assume a standard variation here aswell.
+  prior(normal(68.99123, 68.99123), class = "sigma"))
+```
+
+# (D) Run a prior predictive check
+
+Add your priors to the model below. We will run the model and sample only from our priors, i.e. we ignore the data. This is a good sanity check to see if our priors make sense and what they would predict. Plug in `my_priors` from (C) and run the code chunk.
+
+```{r}
+#| label: model_priors
+
+xmdl_prior <- brm(Distance ~ Sem,
+            family = gaussian(),
+            prior = my_priors,
+            sample_prior = "only",
+            data = sim,
+            seed = 42)
+
+
+# We do a little wrangling to get it into a nice shape
+xmdl_prior |> 
+  # first extract the samples
+  spread_draws(b_Intercept, b_SemSimilar) |> 
+  # Create two columns that represent the two SEM categories
+  mutate(Different = b_Intercept,
+         Similar = b_Intercept + b_SemSimilar) |> 
+  # and then bring into a long format like the data
+  select(Different, Similar) |> 
+  pivot_longer(everything(), names_to = "Sem", values_to = "Distance") |> 
+  # now we plot
+  ggplot(aes(x = Distance, fill = Sem)) +
+    geom_density() +
+    facet_wrap(Sem ~ .)
+
+```
+
+Do the priors reflect what you had in mind? If not, go back to (C) and play around with the priors until you are satisfied.
+
+# (E) Run the full model
+
+If you are happy with your priors, run the full model and plot the posteriors just like in the code chunk above. How did the posteriors change after seeing the data?
+
+```{r}
+#| label: model_posteriors
+
+# Full model (removed sample_prior = "only",)
+xmdl <- brm(Distance ~ Sem,
+            family = gaussian(),
+            prior = my_priors,
+            data = sim,
+            seed = 42)
+
+#Making plot
+xmdl %>%  
+  spread_draws(b_Intercept, b_SemSimilar) %>% 
+  mutate(Different = b_Intercept,
+         Similar = b_Intercept + b_SemSimilar) %>% 
+  select(Different, Similar) %>%  
+  pivot_longer(everything(), names_to = "Sem", values_to = "Distance") %>% 
+  ggplot(aes(x = Distance, fill = Sem)) +
+    geom_density() +
+    facet_wrap(Sem ~ .)
+
+```
+
+After seeing the data the very diffuse priors have given way to much more narrow and shifted posteriors.
+
+We can also plot the data in an alternative way, since we are mostly interested in the difference between the two conditions:
+
+```{r}
+#| label: alternative_plot
+
+# We do a little wrangling to get it into a nice shape
+xmdl |> 
+  # first extract the samples for the differences only
+  spread_draws(b_SemSimilar) |> 
+  # plot
+  ggplot(aes(x = b_SemSimilar)) +
+    geom_density(fill = "purple") 
+
+```
+
+Now, one last step, before we move on. Let's check whether this model could have generated the data using `pp_check()`.
+
+Throughout our modeling process, we'll constantly use `pp_check()`, which is a way for us to know whether our model could've generated the data. This is a way of investigating whether the model 'fits' well. PP checks can tell us, for example, whether the chosen response distribution (in this case Gaussian) was appropriate, or whether the model will have to be expanded, that is, whether particular predictors are missing.
+
+Describe whether the data (dark line) and the posterior samples (light blue line) match up and if now, what the nature of the mismatch is.
+
+```{r}
+#| label: pp_check
+
+pp_check(xmdl, ndraws = 100)
+
+# They do seem to mainly line up. The mean of most of the posterior samples
+# seem to be a bit more right-shifted, but not by much. This might indicate
+# that my randomly generating point prior was a bit high, or that the 
+# simplifications I did were not completely right as lessening the area
+# to the areas within the map would likely lessen the mean distance. The data also
+# signal a narrower curve. I suspect some of the mismatch has to do with
+# my assumption of the spread in my prior being a bit wide.
+
+```
+
+# OPTIONAL (F) fix the assumption violation
+
+Can you fix the mismatch between the observed data (dark blue line) and the simulated data (light blue lines) with, for example, a transformation of the Distance measure? Run the model again with the transformed values and do the pp check again.
+
+```{r}
+#| label: transform
+
+# Testing whether my assumtion that Distance is normally distributed is wrong
+# by running the model with a log(Distance)
+
+xmdl_log_distance <- brm(log(Distance) ~ Sem,
+                         family = gaussian(),
+                         prior = my_priors,
+                         data = sim,
+                         seed = 42)
+
+pp_check(xmdl_log_distance, ndraws = 100)
+
+```
+This looks worse to me. I suspect there is some transform that can be done to Distance, as it is likely skewed a bit, but log-transforming does not seem to be it.
+
+# OPTIONAL (G) specify priors that will reduce the effect of SEM to zero
+
+Now I want you to specify priors that will dominate the posterior, i.e. they will eliminate any predicted difference between conditions.
+
+```{r}
+#| label: too-strict_priors
+
+# Changing my prior of the coefficient to not have any spread
+my_priors_limited <- c(
+  prior(normal(145.116, 68.99123), class = "Intercept"),
+  prior(normal(0, 0.1), class = "b"),
+  prior(normal(68.99123, 68.99123), class = "sigma"))
+
+# Running a model on this prior
+xmdl_limited <- brm(Distance ~ Sem,
+                    family = gaussian(),
+                    prior = my_priors_limited,
+                    data = sim,
+                    seed = 42)
+
+# Checking that the model reduces the effect of difference in Sem to zero
+summary(xmdl_limited)
+```
