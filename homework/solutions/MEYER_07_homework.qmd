@@ -30,7 +30,7 @@ run_if_not_knitting <- function(expr) {
 # nifty code using the pacman package
 # it checks if the packages specified below are installed, if not, they will be installed, if yes, they will be loaded
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(rstudioapi, tidyverse, lme4, brms, bayestestR)
+pacman::p_load(rstudioapi, tidyverse, lme4, brms, bayestestR, modelr)
 
 # set the current working directory to the one where this file is
 run_if_not_knitting(current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -198,10 +198,11 @@ xmdl <- brm(log_rt ~
 
 summary(xmdl)
 mcmc_plot(xmdl, type = "trace")
+pp_check(xmdl, ndraws = 200)
 
 ```
 
-We see a max Rhat of 1.01 for sd(Intercept), Intercept and log_frequency. The model was run again with a larger number of iterations to combat this. A model on 4000 iterations (200 warmup) showed a Rhat of 1.0 across the board. It also shows a smallest effective sampling size of more than 500. An estimate of 6.74 for the intercept means that the model predicts the average RT to be \~846 ms (exp(6.74)). Exp(-0.06) = \~0.9 so we also expect a slight decrease in RT as the log_frequency increases. The plots mainly look like caterpillars, but note the sd_partID_Intercept_log_frequencies one bottoming out.
+We see a max Rhat of 1.01 for sd(Intercept), Intercept and log_frequency. The model was run again with a larger number of iterations to combat this. A model on 4000 iterations (200 warmup) showed a Rhat of 1.0 across the board. It also shows a smallest effective sampling size of more than 500. An estimate of 6.74 for the intercept means that the model predicts the average RT to be \~846 ms (exp(6.74)). Exp(-0.06) = \~0.9 so we also expect a slight decrease in RT as the log_frequency increases. The plots mainly look like caterpillars, but note the sd_partID_Intercept_log_frequencies one bottoming out. PPCheck also gives an acceptable similarity. Arguably, the posterior samples show a bit higher mean, but it is very slight.
 
 ### (C) Plot posterior predictions
 
