@@ -49,7 +49,7 @@ We will be working with Quantese again, see `01_exercise.qmd` and the other data
 ```{r}
 #| label: load-quantese
 
-quantese <- read_csv("../data/quantese_naming_sim.csv") 
+quantese <- read_csv("../../data/quantese_naming_sim.csv") 
 # add log-transformed reaction time
 quantese <- quantese |> 
   mutate(log_rt = log(rt))
@@ -94,8 +94,7 @@ For priors of class `Intercept` and `b`, constrain the parameter space with a wi
 mdl_formula <- bf (log_rt ~ 
                      log_frequency + 
                      (1 + log_frequency | PartID) + 
-                     (1 | ItemID)
-                  )
+                     (1 | ItemID) )
 
 # Finding what needs priors in mdl_formula
 get_prior(mdl_formula, quantese)
@@ -103,19 +102,25 @@ get_prior(mdl_formula, quantese)
 # specify weakly informative priors
 my_priors <- c(
   
-  # We are looking at RT which I have experienced to generally be in the range of 400
-  # to 1000 ms. I thus guess the mean to be about 700 or ~6.5 as log. Attemting to 
-  # make a wide normal distribution I set the standard deviation to be 2. I plot this
-  prior(normal(6,1), class = "Intercept"),
-  prior(normal(0,1), class = "b")
+  # Most RT experiments tend to show an RT of 400 - 1000 ms. Naming something
+  # in an invented language will likely involve a variety of processes in the
+  # brain. Taking the middle here of 700 ms, means I will assume an intercept
+  # of about ~6.5, by rounding an approximate log. Exp(6) ~ 403 and exp(7)
+  # ~ 1097 ms, so I find a standard deviation on 0.5 sufficiently wide.
+  prior(normal(6.5,0.5), class = "Intercept"),
+  
+  # For a weak prior I will expect no change, and take the same variation
+  # as I used for the intercept.
+  prior(normal(0,0.5), class = "b")
   
 )
 
+# Plotting my weak priors with wide limits.
 ggplot()+
   stat_function( fun  = dnorm,
-                 args = list ( mean = 6,
-                               sd   = 1 ) ) + 
-  xlim(3, 9) + 
+                 args = list ( mean = 6.5,
+                               sd   = 0.5 ) ) + 
+  xlim(5, 8) + 
   labs( title = "Distribution of weak prior of intercept",
         subtitle = "Intercept is log_rt when log_frequency = 0",
         x     = "Intercept",
@@ -126,8 +131,8 @@ ggplot()+
 ggplot()+
   stat_function( fun  = dnorm,
                  args = list ( mean = 0,
-                               sd   = 1 ) ) + 
-  xlim(-3, 3) + 
+                               sd   = 0.5 ) ) + 
+  xlim(-2, 2) + 
   labs( title = "Distribution of weak prior of b",
         subtitle = "b is the change in log_rt when log_frequency increases by 1 with constant random effects",
         x     = "b",
@@ -173,9 +178,30 @@ Now run the model with 4 chains, 1000 warm-up and 1000 post-warm-up samples per 
 #   filter(PartID %in% c("01","02","03","04",
 #                        "05","06","07","08"))
 
-# YOUR CODE HERE
+
+xmdl <- brm(log_rt ~ 
+              log_frequency + 
+              (1 + log_frequency | PartID) + 
+              (1 | ItemID),
+            family = gaussian(),
+            prior  = my_priors,
+            data   = quantese,
+            chains = 4,
+            iter   = 4000,
+            warmup = 2000,
+            seed   = 333)
 
 ```
+
+```{r}
+#| label: model_check
+
+summary(xmdl)
+mcmc_plot(xmdl, type = "trace")
+
+```
+
+We see a max Rhat of 1.01 for sd(Intercept), Intercept and log_frequency. The model was run again with a larger number of iterations to combat this. A model on 4000 iterations (200 warmup) showed a Rhat of 1.0 across the board. It also shows a smallest effective sampling size of more than 500. An estimate of 6.74 for the intercept means that the model predicts the average RT to be \~846 ms (exp(6.74)). Exp(-0.06) = \~0.9 so we also expect a slight decrease in RT as the log_frequency increases. The plots mainly look like caterpillars, but note the sd_partID_Intercept_log_frequencies one bottoming out.
 
 ### (C) Plot posterior predictions
 
@@ -184,6 +210,35 @@ Find a way to extract posterior samples from the model for the `Intercept` and t
 ```{r}
 #| label: plot_predictions
 
-# YOUR CODE HERE
+library(tidybayes)
+
+quantese %>% 
+  # Makes a dataframe with 500 even points from minimum to maximum of log_frequency
+  data_grid(log_frequency = seq_range(log_frequency,
+                                      500)) %>% 
+  # Computes predicted values of model. 
+  # https://mjskay.github.io/tidybayes/articles/tidybayes.html
+  # Note than "re_formula = NA" limits the plot to only fixed effects.
+  add_epred_draws(xmdl,
+                  re_formula = NA) %>% 
+  # Generate a plot with log_frequency as x and the predictions as y.
+  ggplot(aes(x = log_frequency,
+             y = .epred)) + 
+  # Gives regression  and 95% confidence interval as a line, 
+  # from the tidybayes guide.
+  stat_lineribbon(.width = 0.95,
+                  fill   = "lightblue",
+                  alpha  = 0.6) + 
+  # Plots all log_rt on the plot.
+  geom_point(data = quantese,
+             aes(y = log_rt),
+             alpha = 0.1,
+             size = 0.1) + 
+  labs(title    = "Posterior prediction of log_rt given a log_frequency",
+       subtitle = "Points are observed values of log_rt\nShaded area is 95% confidence interval.",
+       x        = "log_frequency",
+       y        = "log_rt") + 
+  theme_minimal()
+
 
 ```
