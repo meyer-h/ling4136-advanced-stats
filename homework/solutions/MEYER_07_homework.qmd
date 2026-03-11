@@ -226,7 +226,7 @@ quantese %>%
   ggplot(aes(x = log_frequency,
              y = .epred)) + 
   # Gives regression  and 95% confidence interval as a line, 
-  # from the tidybayes guide.
+  # from the Tidybayes guide.
   stat_lineribbon(.width = 0.95,
                   fill   = "lightblue",
                   alpha  = 0.6) + 
