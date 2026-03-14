@@ -108,29 +108,38 @@ my_priors <- c( prior(normal(145,69), class = "Intercept"),
                 prior(normal(0,138), class = "sigma")
               )
 
+
+
+xmdl_prior <- brm ( formula = my_formula,
+                    prior = my_priors,
+                    sample_prior = "only",
+                    data = sim,
+                    seed = 333)
+
 # Visualizing my priors
-ggplot()+
-  stat_function( fun  = dnorm,
-                 args = list ( mean = 145,
-                               sd   = 69 ) ) + 
-  xlim(0, 364) + 
-  labs( title = "Distribution of weak prior of intercept",
-        subtitle = "Intercept is mean Distance",
-        x     = "Intercept",
-        y     = "Density"
-      ) + 
-  theme_minimal()
-ggplot()+
-  stat_function( fun  = dnorm,
-                 args = list ( mean = 0,
-                               sd   = 69 ) ) + 
-  xlim(-364, 364) + 
-  labs( title = "Distribution of weak prior of intercept",
-        subtitle = "Intercept is mean Distance",
-        x     = "Intercept",
-        y     = "Density"
-      ) + 
-  theme_minimal()
+
+xmdl_prior %>% 
+  
+  # Draws from the fit using only priors to a data frame of all combinations of "Sem" and "Phon"
+  add_epred_draws ( newdata      = expand.grid ( Sem  = levels ( sim$Sem ),
+                                                 Phon = levels ( sim$Phon ) ) ,
+                    sample_prior = "only" ) %>% 
+  
+  # Plots the results with the results from add_epred_draws as the x-axis
+  mutate (Condition = paste ( "Sem", Sem,
+                              "Phon", Phon ) ) %>% 
+  ggplot ( aes ( x    = .epred,
+                 fill = Condition ) ) + 
+  geom_density ( alpha = 0.4 ) + 
+  xlim ( 0,
+         364 ) +
+  facet_wrap ( ~ Condition ) + 
+  labs ( title    = "Predicted distribution of combinations of Sem and Phon",
+         subtitle = "Based on only priors",
+         x        = "Distance (in mm)",
+         y        = "Density") +
+  theme_minimal() + 
+  theme ( legend.position = "none" )
 
 ```
 
@@ -139,7 +148,15 @@ ggplot()+
 ```{r}
 #| label: model_sim
 
-#YOUR MODEL HERE
+xmdl <- brm ( formula = my_formula,
+              family  = gaussian(),
+              data    = sim,
+              chains  = 4,
+              iter    = 2000,
+              warmup  = 1000,
+              seed    = 333
+            )
+
 
 ```
 
