@@ -48,7 +48,7 @@ We will be working with Quantese again, see `01_exercise.qmd` and the other data
 ```{r}
 #| label: load-quantese
 
-quantese <- read_csv("../data/quantese_naming_sim.csv") 
+quantese <- read_csv("../../data/quantese_naming_sim.csv") 
 # add log-transformed reaction time
 quantese <- quantese |> 
   mutate(log_rt = log(rt))
