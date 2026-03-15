@@ -9,7 +9,7 @@ execute:
   warning: false
   message: false
   cache: true
-bibliography: ../resources/bibliography.bib
+bibliography: ../../resources/bibliography.bib
 ---
 
 # Preamble: Loading packages and configuration
@@ -153,6 +153,7 @@ xmdl_prior %>%
 xmdl <- brm ( formula = my_formula,
               family  = gaussian(),
               data    = sim,
+              prior   = my_priors,
               chains  = 4,
               iter    = 2000,
               warmup  = 1000,
@@ -169,10 +170,9 @@ Check the overall model fit with posterior predictive checks. If the model does 
 ```{r}
 #| label: model_fit
 
-#YOUR CODE HERE
+# Cheking fit
 pp_check(xmdl, ndraws = 200)
 
-# Going back to sqrt the Distance
 ```
 
 ## (d) Assess sampling diagnostics
@@ -213,7 +213,7 @@ xmdl %>%
   ) +
   coord_cartesian(xlim = c(7,10)) + 
   labs(title = "Posterior predicted distances by condition",
-       subtitle = "Prior prediction as dashed lines"
+       subtitle = "Prior prediction as dashed lines",
        x     = "Square root of distance in mm",
        y     = "Density",
        color  = NULL) +
@@ -228,12 +228,63 @@ xmdl %>%
   theme_minimal() +
   theme(legend.position = "bottom")
 
+# Looking at posterior in numbers
+posterior_summary(xmdl)
+
+# Looking at direction
+
+p_direction(xmdl)
+
+# Calculating bayes factor
+bayesfactor_parameters(xmdl)
 
 ```
 
 ## (g) Write up your entire analysis:
 
-YOUR WRITE UP HERE
+The goal is to test whether semantic similarity between cities, phonological 
+similarity between cities and their interaction has an effect on the distance
+between where participants draw the cities.
+
+A Bayesian model was fitted predicting the square root of the distance
+between cities from the phonological and semantic similarity, and their 
+interaction. The choice to take the square root of the distance was made
+to combat a slight right skew observed when running the model without.
+
+I selected weakly informative priors based on the dimensions of a A4
+sheet of paper and tested to show their predictions were within
+a reasonable range.
+
+The posterior predictive check was done visually and the predicted
+data matched the observed data reasonably well. Sampling diagnostics
+were also assessed visually with a trace plot that generated acceptable
+caterpillars. Numerically the sampling produced no RHat above 1.00 and 
+had a smallest effective sample size of 2500. This suggests that the
+model is reliable.
+
+Posteriors predict that the distance between cities tend to be smaller
+when the names are semantically similar with a coefficient of 0.34. The 
+credible intervals are 0.10 to 0.59. This is further corroborated by a 99.7%
+probability that the direction is toward closed cities. Note, however, that
+the Bayes factor for this is only 1.66, so care should be taken in making
+too strong a claim for this hypothesis.
+
+With a coefficient of -0.22 and credible intervals from -0.46 to 0.02 the 
+effect of phonologically similar cities is much more uncertain. The predicted
+direction is toward smaller distance, but with a probability of 96.67%. A
+Bayes factor of 0.22 suggests weakly that there is no effect here.
+
+The interaction is, while not clearly, more likely to be of no effect. With a 
+coefficient of -0.05 (CI -0.29 to 0.20) and a probability of direction of 65.8%
+this is close to zero. A Bayes factor of 0.046 means that there is a strong 
+claim to be made for this not having an effect.
+
+To conclude, the model suggests that there is some validity to the claim
+that semantically similar cities are placed closer together, though not 
+without some variance. Phonological similarity and the interaction between
+the two are suggested through the model to have less of an impact, with some
+uncertainty, though the model suggests that an effect of phonological similarity
+is more likely than the effect from their interaction.
 
 ## OPTIONAL (h) compare your interpretation to the original findings
 
