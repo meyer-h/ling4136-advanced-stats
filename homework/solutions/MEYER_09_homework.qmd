@@ -2,10 +2,10 @@
 title: "session09 - exercises"
 format: html
 editor: visual
-date: 2026-03-18
-author: 
+date: 2026-03-22
+author:
   - Timo Roettger
-  - Hågard Meyer
+  - Hågard Meyer  
 execute:
   error: false
   warning: false
@@ -57,7 +57,7 @@ Let's have a look at the data:
 #| label: data
 
 # Load in the dataset and already remove irrelevant stuff:
-pokemon <- read_csv('../../data/Japanese_Pokemon.csv') |> 
+pokemon <- read_csv('../../data/Japanese_Pokemon_simplified.csv') |> 
   select(-`Sum of values`, -Checksum)
 
 # check data set:
@@ -71,7 +71,7 @@ Variables:
 
 `Designation`: source of Pokemon name. Official = the official names of Japanese Pokemon; Elicited = elicited names from naive participants.
 
-`pokemonname`: Pokemon name in Japanese
+(`pokemonname`: Pokemon name in Japanese) removed in simplified data file
 
 `Output`: Pokemon name in transcribed form
 
@@ -97,17 +97,138 @@ Now imagine researchers want to use this data set to *test* the following hypoth
 
 Take the hypothesis and what you know about the data set and its structure to predict a very specific relationship that you can test. You are allowed to look at the dataset, but do not look at concrete relationships that might be a manifestation of the hypothesis.
 
+### My approach
+
+Taking the hypothesis given above I instinctively see that it is vague. One aspect I see that is testable is the relationship between evolution stage and length of Japanese name. This can be done simply by predicting the length of Japanese name by the evolution stage, including a random effect for the whether the output is from the Pokemon official name, or an elicited one. Pokemon that cannot evolve are removed. An addition of random effects for both unique Pokemon and speaker for elicited names could have been considered, but, as an equal output does not ensure that it is the same Pokemon, this is not done due to there not being a variable for this.
+
+The task is provided with the LME4 package, so I am assuming we are doing the comparison using this.
+
 ## B: Run your preregistered analysis
 
 Run the preregistered analysis made in (A) above and interpret your results relative to the hypothesis.
+
+### My approach
+
+```{r}
+
+# Removing pokemon that cannot evolve and turning the designation into a factor
+pokemon_clean <- 
+  pokemon %>% 
+  filter( !is.na ( Evolution ) ) %>% 
+  mutate ( Designation = as.factor ( Designation ) )
+
+# Fitting a model to the relationship
+xmdl <- lmer ( Length ~ 
+               Evolution + 
+               (1 | Designation ),
+             data = pokemon_clean)
+
+# Fitting a null model to compare it to
+xmdl_null <- lmer ( Length ~ 
+                      1 + 
+                      (1 | Designation ),
+                    data = pokemon_clean)
+
+# Looking at the model
+summary(xmdl)
+
+# Testing the model against a null hypothesis
+anova(xmdl_null, xmdl)
+```
+
+Looking at the output we see that by moving up a stage in evolution we get an increase of about \~1.27 in name length. Mean length of pre-evolution Pokemon is predicted to be \~6.99 ( \~5.72 + \~1.27 ) and for post-evolution Pokemon we get \~8.27 ( \~5.72 + ( 2 \* \~1.27 ) ). A P-value of less than 0.001 gives some credibility to this claim.
 
 ## C: Show contradicting results
 
 Now explore the data and find two alternative way to test the research hypothesis that yield convincing results that go in opposite directions based of your findings in (A). Justify all your choices verbally after the fact.
 
+### My approach
+
+Exploring the dataset I find some concerning details (in addition to the lack of specifier noted in A). As an example, I can find an output "rizaRdo" noted with NA in Evolution to mark "do not evolve". I suspect this is リザード (Hepburn "rizādo") who does evolve into リザードン (Hepburn "rizādon"). Not having a species definition in the data set, I have to analyse what I am given. I choose to look at the relationship between Evolution and 1. the proportion of unique sounds in the Japanese name 2. the proportion of consonants in the Japanese name.
+
+```{r}
+
+# Additional mutations
+
+pokemon_mutated <- 
+  pokemon_clean %>% 
+  mutate ( unique_characters = rowSums ( select ( .,
+                                                  f:c )
+                                         > 0 ) ) %>% 
+  mutate ( proportion_unique_characters = unique_characters / Length ) %>% 
+  mutate ( sum_vowels = rowSums ( select ( .,
+                                           a,
+                                           i,
+                                           u,
+                                           e,
+                                           o,
+                                           R) ) ) %>% 
+  mutate ( proportion_vowels = sum_vowels / Length ) %>% 
+  mutate ( proportion_consonants = 1 - proportion_vowels )
+
+# Fitting a model to predict proportion of unique characters based on Evolution
+ymdl <- lmer ( prop_unique ~ 
+                 Evolution + 
+                 (1 | Designation ),
+               data = pokemon_mutated)
+
+# Fittin null model
+ymdl_null <- lmer ( prop_unique ~ 
+                      1 + 
+                      (1 | Designation ),
+                    data = pokemon_mutated)
+
+# Showing model
+summary(ymdl)
+
+# Comparing model to null
+anova(ymdl_null, ymdl)
+
+# Fitting model to predict proportion of consonants based on Evolution
+zmdl <- lmer ( proportion_consonants ~ 
+                 Evolution + 
+                 (1 | Designation ),
+               data = pokemon_mutated)
+
+# Fitting null model
+zmdl_null <- lmer ( proportion_consonants ~ 
+                      1 + 
+                      (1 | Designation ),
+                    data = pokemon_mutated)
+
+# Showing model
+summary(zmdl)
+
+# Comparing model to null
+anova(zmdl_null, zmdl)
+```
+
+My justification for choosing to look at the proportion of unique characters is that this can be interpreted as an increase in complexity in the Japanese name. If evolution marks an increase in features and / or power, we might expect an increase in complexity or diversity to reflect that. The model does, however, provide a negative trend for proportion of unique character as a Pokemon evolves ( -\~0.029 with a P-value of less than 0.001). This indicates that Pokemon that can evolve have more variation in characters than post-evolution Pokemon.
+
+My justification for choosing to look at the proportion of consonants in the Japanese name is that consonants can be perceived as harsher and / or stronger than vowels. This can be thought to mirror the pre- and post-evolution Pokemon change given the presumed change in power. Again the model predicts a negative trend here ( \~-0.010 with a P-value of \~0.008) suggesting that there is a lower proportion of consonants in the post-evolution.
+
 ## D: Researcher degrees of freedom
 
 Note down all dimensions of researcher degrees of freedom that make the mapping of the hypothesis onto your data analysis vague. How many possible combinations can you think of?
+
+### My approach
+
+I will do this by taking the hypothesis as sections and judging those.
+
+> *The evolution stage of a Pokemon is reflected in aspects of its Japanese name*
+
+*The evolution stage* is vague as is. Mainly, what happens with Pokemon that cannot evolve? These can be interpreted as irrelevant (not part of an evolution stage), possibly joined with pre-evolution Pokemon (they have not evolved) or joined with the post-evolution Pokemon (they cannot evolve further). Looking at the Evolution column it gets worse. I have mentioned that some Pokemon seem to show wrong information about their ability to evolve. Furthermore, prior knowledge of Pokemon tells me that Pokemon can have more categories than are present in the dataset. at the very least we have:
+
+1.  Pokemon that do not evolve and have not evolved from anything
+2.  Pokemon that can evolve and have not evolved from anything
+3.  Pokemon that can evolve and have evolved from something
+4.  Pokemon that cannot evolve and have evolved from something
+
+*Pokemon* also lends itself to some vagueness here. Looking at the data set we have two different designations for these, namely *Official* (presumably a written official name) and *Elicited* (as by a naive speaker). This ties together with the wording *Japanese name*. A researcher can either join these as one group, or choose to focus on just one of them. While these are likely connected, they are not guaranteed to give the same outputs.
+
+Finally *aspect* is likely the most vague term. A name can have an almost infinite number of aspects, like intonation, stress, connotations to other words etc. Even within the given data set, a researcher can choose to look at length of name, any one of the output sounds individually or any number of combination and orderings of these. The number of combinations here is still astronomical and each of those combinations can be combined again with decisions made in relation to my previous paragraphs decisions.
+
+Importantly these choices are not trivial. While they might lead to similar conclusions, they just as well might not.
 
 # References
 
