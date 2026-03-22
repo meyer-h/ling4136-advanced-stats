@@ -167,13 +167,13 @@ pokemon_mutated <-
   mutate ( proportion_consonants = 1 - proportion_vowels )
 
 # Fitting a model to predict proportion of unique characters based on Evolution
-ymdl <- lmer ( prop_unique ~ 
+ymdl <- lmer ( proportion_unique_characters ~ 
                  Evolution + 
                  (1 | Designation ),
                data = pokemon_mutated)
 
 # Fittin null model
-ymdl_null <- lmer ( prop_unique ~ 
+ymdl_null <- lmer ( proportion_unique_characters ~ 
                       1 + 
                       (1 | Designation ),
                     data = pokemon_mutated)

@@ -196,452 +196,239 @@ div.csl-indent {
 <section id="a-preregister-your-analysis" class="level2">
 <h2 class="anchored" data-anchor-id="a-preregister-your-analysis">A: Preregister your analysis</h2>
 <p>Take the hypothesis and what you know about the data set and its structure to predict a very specific relationship that you can test. You are allowed to look at the dataset, but do not look at concrete relationships that might be a manifestation of the hypothesis.</p>
+<section id="my-approach" class="level3">
+<h3 class="anchored" data-anchor-id="my-approach">My approach</h3>
+<p>Taking the hypothesis given above I instinctively see that it is vague. One aspect I see that is testable is the relationship between evolution stage and length of Japanese name. This can be done simply by predicting the length of Japanese name by the evolution stage, including a random effect for the whether the output is from the Pokemon official name, or an elicited one. Pokemon that cannot evolve are removed. An addition of random effects for both unique Pokemon and speaker for elicited names could have been considered, but, as an equal output does not ensure that it is the same Pokemon, this is not done due to there not being a variable for this.</p>
+<p>The task is provided with the LME4 package, so I am assuming we are doing the comparison using this.</p>
+</section>
 </section>
 <section id="b-run-your-preregistered-analysis" class="level2">
 <h2 class="anchored" data-anchor-id="b-run-your-preregistered-analysis">B: Run your preregistered analysis</h2>
 <p>Run the preregistered analysis made in (A) above and interpret your results relative to the hypothesis.</p>
+<section id="my-approach-1" class="level3">
+<h3 class="anchored" data-anchor-id="my-approach-1">My approach</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Gather collections</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>pokemon</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Removing pokemon that cannot evolve and turning the designation into a factor</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>pokemon_clean <span class="ot">&lt;-</span> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  pokemon <span class="sc">%&gt;%</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>( <span class="sc">!</span><span class="fu">is.na</span> ( Evolution ) ) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> ( <span class="at">Designation =</span> <span class="fu">as.factor</span> ( Designation ) )</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting a model to the relationship</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>xmdl <span class="ot">&lt;-</span> <span class="fu">lmer</span> ( Length <span class="sc">~</span> </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>               Evolution <span class="sc">+</span> </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>               (<span class="dv">1</span> <span class="sc">|</span> Designation ),</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">data =</span> pokemon_clean)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting a null model to compare it to</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>xmdl_null <span class="ot">&lt;-</span> <span class="fu">lmer</span> ( Length <span class="sc">~</span> </span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>                      <span class="dv">1</span> <span class="sc">+</span> </span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>                      (<span class="dv">1</span> <span class="sc">|</span> Designation ),</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> pokemon_clean)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Looking at the model</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(xmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1,865 × 40
-   Designation Output Length Evolution     f     T     b     d     g     G     z
-   &lt;chr&gt;       &lt;chr&gt;   &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
- 1 Official    fuSig…     10         1     1     0     0     1     1     0     0
- 2 Official    fuSig…      9        NA     1     0     0     0     1     0     0
- 3 Official    fuSig…     10         2     1     0     1     0     1     0     0
- 4 Official    hitok…      8         1     0     0     0     0     1     0     0
- 5 Official    rizaR…      7        NA     0     0     0     1     0     0     1
- 6 Official    rizaR…      8         2     0     0     0     1     0     0     1
- 7 Official    zenig…      8         1     0     0     0     0     1     0     1
- 8 Official    kameR…      7        NA     0     0     0     0     0     0     0
- 9 Official    kameQ…      9         2     0     0     0     0     0     0     0
-10 Official    Katap…      7         1     0     0     0     0     0     0     0
-# ℹ 1,855 more rows
-# ℹ 29 more variables: j &lt;dbl&gt;, p &lt;dbl&gt;, t &lt;dbl&gt;, C &lt;dbl&gt;, k &lt;dbl&gt;, K &lt;dbl&gt;,
-#   s &lt;dbl&gt;, S &lt;dbl&gt;, h &lt;dbl&gt;, m &lt;dbl&gt;, M &lt;dbl&gt;, n &lt;dbl&gt;, N &lt;dbl&gt;, r &lt;dbl&gt;,
-#   L &lt;dbl&gt;, y &lt;dbl&gt;, w &lt;dbl&gt;, a &lt;dbl&gt;, i &lt;dbl&gt;, u &lt;dbl&gt;, e &lt;dbl&gt;, o &lt;dbl&gt;,
-#   Q &lt;dbl&gt;, R &lt;dbl&gt;, X &lt;dbl&gt;, H &lt;dbl&gt;, v &lt;dbl&gt;, P &lt;dbl&gt;, c &lt;dbl&gt;</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># NA is removed</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>pokemon_clean <span class="ot">&lt;-</span> </span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  pokemon <span class="sc">%&gt;%</span> </span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>( <span class="sc">!</span><span class="fu">is.na</span> ( Evolution ) )</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>xmdl <span class="ot">&lt;-</span> <span class="fu">lm</span> ( Length <span class="sc">~</span> </span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                 Evolution,</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> pokemon_clean)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(xmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Length ~ Evolution, data = pokemon_clean)
+<pre><code>Linear mixed model fit by REML ['lmerMod']
+Formula: Length ~ Evolution + (1 | Designation)
+   Data: pokemon_clean
 
-Residuals:
+REML criterion at convergence: 6631.6
+
+Scaled residuals: 
     Min      1Q  Median      3Q     Max 
--7.2580 -1.2580  0.0178  1.0178 13.0178 
+-3.7356 -0.6283 -0.0263  0.4916  6.7640 
 
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)  5.70631    0.15372   37.12   &lt;2e-16 ***
-Evolution    1.27586    0.09677   13.19   &lt;2e-16 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+Random effects:
+ Groups      Name        Variance Std.Dev.
+ Designation (Intercept) 0.009479 0.09736 
+ Residual                3.728567 1.93095 
+Number of obs: 1595, groups:  Designation, 2
 
-Residual standard error: 1.932 on 1593 degrees of freedom
-Multiple R-squared:  0.09839,   Adjusted R-squared:  0.09782 
-F-statistic: 173.8 on 1 and 1593 DF,  p-value: &lt; 2.2e-16</code></pre>
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  5.72076    0.16867   33.92
+Evolution    1.27415    0.09672   13.17
+
+Correlation of Fixed Effects:
+          (Intr)
+Evolution -0.865</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># NA is removed</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>pokemon_clean <span class="ot">&lt;-</span> </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  pokemon <span class="sc">%&gt;%</span> </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>( <span class="sc">!</span><span class="fu">is.na</span> ( Evolution ) ) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">count_nonzero =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., f<span class="sc">:</span>c) <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_unique =</span> count_nonzero <span class="sc">/</span> Length</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>zmdl <span class="ot">&lt;-</span> <span class="fu">lm</span> ( prop_unique <span class="sc">~</span> </span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                 Evolution,</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> pokemon_clean)</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(zmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Testing the model against a null hypothesis</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(xmdl_null, xmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = prop_unique ~ Evolution, data = pokemon_clean)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--0.51458 -0.07013  0.00923  0.15209  0.18081 
-
-Coefficients:
-             Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)  0.876627   0.010896  80.451  &lt; 2e-16 ***
-Evolution   -0.028717   0.006859  -4.187 2.99e-05 ***
+<pre><code>Data: pokemon_clean
+Models:
+xmdl_null: Length ~ 1 + (1 | Designation)
+xmdl: Length ~ Evolution + (1 | Designation)
+          npar    AIC    BIC  logLik -2*log(L)  Chisq Df Pr(&gt;Chisq)    
+xmdl_null    3 6796.3 6812.4 -3395.2    6790.3                         
+xmdl         4 6633.3 6654.8 -3312.6    6625.3 165.06  1  &lt; 2.2e-16 ***
 ---
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 0.137 on 1593 degrees of freedom
-Multiple R-squared:  0.01088,   Adjusted R-squared:  0.01026 
-F-statistic: 17.53 on 1 and 1593 DF,  p-value: 2.986e-05</code></pre>
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 </div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleaning the dataset. Evolution stages are set without confusing NA value.</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># NA is removed</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>pokemon_clean <span class="ot">&lt;-</span> </span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  pokemon <span class="sc">%&gt;%</span> </span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>( <span class="sc">!</span><span class="fu">is.na</span> ( Evolution ) ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">count_nonzero =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., f<span class="sc">:</span>c) <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_unique =</span> count_nonzero <span class="sc">/</span> Length</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_voiced =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., b, d, g, z, j, r), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_voiced =</span> sum_voiced <span class="sc">/</span> Length</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_vowel =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., a, i, u, e, o, R), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_vowel =</span> sum_vowel <span class="sc">/</span> Length</span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>xmdl <span class="ot">&lt;-</span> <span class="fu">lm</span> ( prop_voiced <span class="sc">~</span> </span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>                 Evolution,</span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> pokemon_clean)</span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="co"># NA is not evolved</span></span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>pokemon_clean_2 <span class="ot">&lt;-</span> </span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>  pokemon <span class="sc">%&gt;%</span> </span>
-<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Evolution =</span> <span class="fu">replace_na</span> ( Evolution, <span class="dv">1</span>) ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
-<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">count_nonzero =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., f<span class="sc">:</span>c) <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_unique =</span> count_nonzero <span class="sc">/</span> Length</span>
-<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_voiced =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., b, d, g, z, j, r), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_voiced =</span> sum_voiced <span class="sc">/</span> Length</span>
-<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
-<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_vowel =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., a, i, u, e, o, R), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_vowel =</span> sum_vowel <span class="sc">/</span> Length</span>
-<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>ymdl <span class="ot">&lt;-</span> <span class="fu">lm</span> ( prop_vowel <span class="sc">~</span> </span>
-<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>                 Evolution,</span>
-<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> pokemon_clean_2)</span>
-<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(xmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = prop_voiced ~ Evolution, data = pokemon_clean)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--0.19388 -0.08358 -0.01207  0.09183  0.34419 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept) 0.117728   0.010194  11.549  &lt; 2e-16 ***
-Evolution   0.038078   0.006417   5.934 3.62e-09 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 0.1281 on 1593 degrees of freedom
-Multiple R-squared:  0.02163,   Adjusted R-squared:  0.02101 
-F-statistic: 35.21 on 1 and 1593 DF,  p-value: 3.62e-09</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ymdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = prop_vowel ~ Evolution, data = pokemon_clean_2)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--0.19980 -0.03313 -0.02324  0.04819  0.46687 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept) 0.513349   0.005368  95.624  &lt; 2e-16 ***
-Evolution   0.009893   0.003538   2.797  0.00522 ** 
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 0.07572 on 1863 degrees of freedom
-Multiple R-squared:  0.00418,   Adjusted R-squared:  0.003646 
-F-statistic:  7.82 on 1 and 1863 DF,  p-value: 0.005219</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># NA is removed and looking at Official</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>pokemon_clean_3 <span class="ot">&lt;-</span> </span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  pokemon <span class="sc">%&gt;%</span> </span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>( <span class="sc">!</span><span class="fu">is.na</span> ( Evolution ) ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span> ( Designation <span class="sc">==</span> <span class="st">"Official"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">count_nonzero =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., f<span class="sc">:</span>c) <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_unique =</span> count_nonzero <span class="sc">/</span> Length</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_voiced =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., b, d, g, z, j, r), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_voiced =</span> sum_voiced <span class="sc">/</span> Length</span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_vowel =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., a, i, u, e, o, R), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_vowel =</span> sum_vowel <span class="sc">/</span> Length</span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>zmdl <span class="ot">&lt;-</span> <span class="fu">lm</span> ( Length <span class="sc">~</span> </span>
-<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>                 Evolution,</span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> pokemon_clean_3)</span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="co"># NA is removed and looking at Elicited</span></span>
-<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>pokemon_clean_4 <span class="ot">&lt;-</span> </span>
-<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>  pokemon <span class="sc">%&gt;%</span> </span>
-<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>( <span class="sc">!</span><span class="fu">is.na</span> ( Evolution ) ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span> ( Designation <span class="sc">==</span> <span class="st">"Elicited"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>        <span class="fu">mutate</span>(</span>
-<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">count_nonzero =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., f<span class="sc">:</span>c) <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_unique =</span> count_nonzero <span class="sc">/</span> Length</span>
-<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_voiced =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., b, d, g, z, j, r), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_voiced =</span> sum_voiced <span class="sc">/</span> Length</span>
-<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
-<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_vowel =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., a, i, u, e, o, R), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_vowel =</span> sum_vowel <span class="sc">/</span> Length</span>
-<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>amdl <span class="ot">&lt;-</span> <span class="fu">lm</span> ( Length <span class="sc">~</span> </span>
-<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>                 Evolution,</span>
-<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> pokemon_clean_4)</span>
-<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a><span class="co"># NA is stage 1 and looking at Official</span></span>
-<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>pokemon_clean_5 <span class="ot">&lt;-</span> </span>
-<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a>  pokemon <span class="sc">%&gt;%</span> </span>
-<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Evolution =</span> <span class="fu">replace_na</span> ( Evolution, <span class="dv">1</span>) ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span> ( Designation <span class="sc">==</span> <span class="st">"Official"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
-<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a>    <span class="at">count_nonzero =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., f<span class="sc">:</span>c) <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_unique =</span> count_nonzero <span class="sc">/</span> Length</span>
-<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-69"><a href="#cb13-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_voiced =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., b, d, g, z, j, r), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-70"><a href="#cb13-70" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-71"><a href="#cb13-71" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_voiced =</span> sum_voiced <span class="sc">/</span> Length</span>
-<span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
-<span id="cb13-75"><a href="#cb13-75" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_vowel =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., a, i, u, e, o, R), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-76"><a href="#cb13-76" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-77"><a href="#cb13-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-78"><a href="#cb13-78" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_vowel =</span> sum_vowel <span class="sc">/</span> Length</span>
-<span id="cb13-79"><a href="#cb13-79" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb13-80"><a href="#cb13-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-81"><a href="#cb13-81" aria-hidden="true" tabindex="-1"></a>bmdl <span class="ot">&lt;-</span> <span class="fu">lm</span> ( Length <span class="sc">~</span> </span>
-<span id="cb13-82"><a href="#cb13-82" aria-hidden="true" tabindex="-1"></a>                 Evolution,</span>
-<span id="cb13-83"><a href="#cb13-83" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> pokemon_clean_5)</span>
-<span id="cb13-84"><a href="#cb13-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-85"><a href="#cb13-85" aria-hidden="true" tabindex="-1"></a><span class="co"># NA is stage 1 and looking at Elicited</span></span>
-<span id="cb13-86"><a href="#cb13-86" aria-hidden="true" tabindex="-1"></a>pokemon_clean_6 <span class="ot">&lt;-</span> </span>
-<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a>  pokemon <span class="sc">%&gt;%</span> </span>
-<span id="cb13-88"><a href="#cb13-88" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Evolution =</span> <span class="fu">replace_na</span> ( Evolution, <span class="dv">1</span>) ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-89"><a href="#cb13-89" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span> ( Designation <span class="sc">==</span> <span class="st">"Elicited"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-90"><a href="#cb13-90" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
-<span id="cb13-91"><a href="#cb13-91" aria-hidden="true" tabindex="-1"></a>    <span class="at">count_nonzero =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., f<span class="sc">:</span>c) <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-92"><a href="#cb13-92" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-93"><a href="#cb13-93" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_unique =</span> count_nonzero <span class="sc">/</span> Length</span>
-<span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-97"><a href="#cb13-97" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_voiced =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., b, d, g, z, j, r), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-98"><a href="#cb13-98" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-99"><a href="#cb13-99" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-100"><a href="#cb13-100" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_voiced =</span> sum_voiced <span class="sc">/</span> Length</span>
-<span id="cb13-101"><a href="#cb13-101" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-102"><a href="#cb13-102" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
-<span id="cb13-103"><a href="#cb13-103" aria-hidden="true" tabindex="-1"></a>    <span class="at">sum_vowel =</span> <span class="fu">rowSums</span>(<span class="fu">select</span>(., a, i, u, e, o, R), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-104"><a href="#cb13-104" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-105"><a href="#cb13-105" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb13-106"><a href="#cb13-106" aria-hidden="true" tabindex="-1"></a>    <span class="at">prop_vowel =</span> sum_vowel <span class="sc">/</span> Length</span>
-<span id="cb13-107"><a href="#cb13-107" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb13-108"><a href="#cb13-108" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-109"><a href="#cb13-109" aria-hidden="true" tabindex="-1"></a>cmdl <span class="ot">&lt;-</span> <span class="fu">lm</span> ( Length <span class="sc">~</span> </span>
-<span id="cb13-110"><a href="#cb13-110" aria-hidden="true" tabindex="-1"></a>                 Evolution,</span>
-<span id="cb13-111"><a href="#cb13-111" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> pokemon_clean_6)</span>
-<span id="cb13-112"><a href="#cb13-112" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-113"><a href="#cb13-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-114"><a href="#cb13-114" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(xmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = prop_voiced ~ Evolution, data = pokemon_clean)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--0.19388 -0.08358 -0.01207  0.09183  0.34419 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept) 0.117728   0.010194  11.549  &lt; 2e-16 ***
-Evolution   0.038078   0.006417   5.934 3.62e-09 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 0.1281 on 1593 degrees of freedom
-Multiple R-squared:  0.02163,   Adjusted R-squared:  0.02101 
-F-statistic: 35.21 on 1 and 1593 DF,  p-value: 3.62e-09</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ymdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = prop_vowel ~ Evolution, data = pokemon_clean_2)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--0.19980 -0.03313 -0.02324  0.04819  0.46687 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept) 0.513349   0.005368  95.624  &lt; 2e-16 ***
-Evolution   0.009893   0.003538   2.797  0.00522 ** 
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 0.07572 on 1863 degrees of freedom
-Multiple R-squared:  0.00418,   Adjusted R-squared:  0.003646 
-F-statistic:  7.82 on 1 and 1863 DF,  p-value: 0.005219</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(zmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Length ~ Evolution, data = pokemon_clean_3)
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--4.2805 -1.1785 -0.1785  0.8215  3.8215 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)   6.3826     0.1689  37.793   &lt;2e-16 ***
-Evolution     0.8979     0.1057   8.495   &lt;2e-16 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 1.324 on 626 degrees of freedom
-Multiple R-squared:  0.1034,    Adjusted R-squared:  0.1019 
-F-statistic: 72.16 on 1 and 626 DF,  p-value: &lt; 2.2e-16</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(amdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Length ~ Evolution, data = pokemon_clean_4)
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--7.3113 -1.3113 -0.3113  1.2054 13.2054 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)   5.2779     0.2271   23.24   &lt;2e-16 ***
-Evolution     1.5167     0.1435   10.57   &lt;2e-16 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 2.231 on 965 degrees of freedom
-Multiple R-squared:  0.1038,    Adjusted R-squared:  0.1029 
-F-statistic: 111.7 on 1 and 965 DF,  p-value: &lt; 2.2e-16</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(bmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Length ~ Evolution, data = pokemon_clean_5)
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--4.5445 -0.5445 -0.1785  0.8215  4.4555 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)  6.91054    0.13789   50.12  &lt; 2e-16 ***
-Evolution    0.63396    0.09548    6.64 5.43e-11 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 1.375 on 896 degrees of freedom
-Multiple R-squared:  0.0469,    Adjusted R-squared:  0.04584 
-F-statistic: 44.09 on 1 and 896 DF,  p-value: 5.431e-11</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Length ~ Evolution, data = pokemon_clean_6)
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--7.3113 -1.3113 -0.3113  1.2054 13.2054 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)   5.2779     0.2271   23.24   &lt;2e-16 ***
-Evolution     1.5167     0.1435   10.57   &lt;2e-16 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 2.231 on 965 degrees of freedom
-Multiple R-squared:  0.1038,    Adjusted R-squared:  0.1029 
-F-statistic: 111.7 on 1 and 965 DF,  p-value: &lt; 2.2e-16</code></pre>
-</div>
-</div>
+<p>Looking at the output we see that by moving up a stage in evolution we get an increase of about ~1.27 in name length. Mean length of pre-evolution Pokemon is predicted to be ~6.99 ( ~5.72 + ~1.27 ) and for post-evolution Pokemon we get ~8.27 ( ~5.72 + ( 2 * ~1.27 ) ). A P-value of less than 0.001 gives some credibility to this claim.</p>
+</section>
 </section>
 <section id="c-show-contradicting-results" class="level2">
 <h2 class="anchored" data-anchor-id="c-show-contradicting-results">C: Show contradicting results</h2>
 <p>Now explore the data and find two alternative way to test the research hypothesis that yield convincing results that go in opposite directions based of your findings in (A). Justify all your choices verbally after the fact.</p>
+<section id="my-approach-2" class="level3">
+<h3 class="anchored" data-anchor-id="my-approach-2">My approach</h3>
+<p>Exploring the dataset I find some concerning details (in addition to the lack of specifier noted in A). As an example, I can find an output “rizaRdo” noted with NA in Evolution to mark “do not evolve”. I suspect this is リザード (Hepburn “rizādo”) who does evolve into リザードン (Hepburn “rizādon”). Not having a species definition in the data set, I have to analyse what I am given. I choose to look at the relationship between Evolution and 1. the proportion of unique sounds in the Japanese name 2. the proportion of consonants in the Japanese name.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Additional mutations</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>pokemon_mutated <span class="ot">&lt;-</span> </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  pokemon_clean <span class="sc">%&gt;%</span> </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> ( <span class="at">unique_characters =</span> <span class="fu">rowSums</span> ( <span class="fu">select</span> ( .,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                                                  f<span class="sc">:</span>c )</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>                                         <span class="sc">&gt;</span> <span class="dv">0</span> ) ) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> ( <span class="at">proportion_unique_characters =</span> unique_characters <span class="sc">/</span> Length ) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> ( <span class="at">sum_vowels =</span> <span class="fu">rowSums</span> ( <span class="fu">select</span> ( .,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                                           a,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                                           i,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>                                           u,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                                           e,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                                           o,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                                           R) ) ) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> ( <span class="at">proportion_vowels =</span> sum_vowels <span class="sc">/</span> Length ) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span> ( <span class="at">proportion_consonants =</span> <span class="dv">1</span> <span class="sc">-</span> proportion_vowels )</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting a model to predict proportion of unique characters based on Evolution</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>ymdl <span class="ot">&lt;-</span> <span class="fu">lmer</span> ( proportion_unique_characters <span class="sc">~</span> </span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>                 Evolution <span class="sc">+</span> </span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>                 (<span class="dv">1</span> <span class="sc">|</span> Designation ),</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> pokemon_mutated)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Fittin null model</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>ymdl_null <span class="ot">&lt;-</span> <span class="fu">lmer</span> ( proportion_unique_characters <span class="sc">~</span> </span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>                      <span class="dv">1</span> <span class="sc">+</span> </span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>                      (<span class="dv">1</span> <span class="sc">|</span> Designation ),</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> pokemon_mutated)</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Showing model</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ymdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear mixed model fit by REML ['lmerMod']
+Formula: proportion_unique_characters ~ Evolution + (1 | Designation)
+   Data: pokemon_mutated
+
+REML criterion at convergence: -1800
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.7573 -0.5121  0.0674  1.1105  1.3202 
+
+Random effects:
+ Groups      Name        Variance Std.Dev.
+ Designation (Intercept) 0.00000  0.000   
+ Residual                0.01876  0.137   
+Number of obs: 1595, groups:  Designation, 2
+
+Fixed effects:
+             Estimate Std. Error t value
+(Intercept)  0.876627   0.010896  80.451
+Evolution   -0.028717   0.006859  -4.187
+
+Correlation of Fixed Effects:
+          (Intr)
+Evolution -0.949
+optimizer (nloptwrap) convergence code: 0 (OK)
+boundary (singular) fit: see help('isSingular')</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparing model to null</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(ymdl_null, ymdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Data: pokemon_mutated
+Models:
+ymdl_null: proportion_unique_characters ~ 1 + (1 | Designation)
+ymdl: proportion_unique_characters ~ Evolution + (1 | Designation)
+          npar     AIC     BIC logLik -2*log(L)  Chisq Df Pr(&gt;Chisq)    
+ymdl_null    3 -1794.2 -1778.1 900.10   -1800.2                         
+ymdl         4 -1809.7 -1788.2 908.83   -1817.7 17.454  1  2.943e-05 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting model to predict proportion of consonants based on Evolution</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>zmdl <span class="ot">&lt;-</span> <span class="fu">lmer</span> ( proportion_consonants <span class="sc">~</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                 Evolution <span class="sc">+</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                 (<span class="dv">1</span> <span class="sc">|</span> Designation ),</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> pokemon_mutated)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Fitting null model</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>zmdl_null <span class="ot">&lt;-</span> <span class="fu">lmer</span> ( proportion_consonants <span class="sc">~</span> </span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>                      <span class="dv">1</span> <span class="sc">+</span> </span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>                      (<span class="dv">1</span> <span class="sc">|</span> Designation ),</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> pokemon_mutated)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Showing model</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(zmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear mixed model fit by REML ['lmerMod']
+Formula: proportion_consonants ~ Evolution + (1 | Designation)
+   Data: pokemon_mutated
+
+REML criterion at convergence: -3643.5
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-6.0294 -0.5808  0.2171  0.4866  2.6586 
+
+Random effects:
+ Groups      Name        Variance  Std.Dev.
+ Designation (Intercept) 6.179e-05 0.007861
+ Residual                5.888e-03 0.076734
+Number of obs: 1595, groups:  Designation, 2
+
+Fixed effects:
+             Estimate Std. Error t value
+(Intercept)  0.488300   0.008270  59.042
+Evolution   -0.010200   0.003844  -2.654
+
+Correlation of Fixed Effects:
+          (Intr)
+Evolution -0.701</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparing model to null</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(zmdl_null, zmdl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Data: pokemon_mutated
+Models:
+zmdl_null: proportion_consonants ~ 1 + (1 | Designation)
+zmdl: proportion_consonants ~ Evolution + (1 | Designation)
+          npar     AIC     BIC logLik -2*log(L)  Chisq Df Pr(&gt;Chisq)   
+zmdl_null    3 -3648.6 -3632.5 1827.3   -3654.6                        
+zmdl         4 -3653.6 -3632.1 1830.8   -3661.6 7.0024  1    0.00814 **
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>My justification for choosing to look at the proportion of unique characters is that this can be interpreted as an increase in complexity in the Japanese name. If evolution marks an increase in features and / or power, we might expect an increase in complexity or diversity to reflect that. The model does, however, provide a negative trend for proportion of unique character as a Pokemon evolves ( -~0.029 with a P-value of less than 0.001). This indicates that Pokemon that can evolve have more variation in characters than post-evolution Pokemon.</p>
+<p>My justification for choosing to look at the proportion of consonants in the Japanese name is that consonants can be perceived as harsher and / or stronger than vowels. This can be thought to mirror the pre- and post-evolution Pokemon change given the presumed change in power. Again the model predicts a negative trend here ( ~-0.010 with a P-value of ~0.008) suggesting that there is a lower proportion of consonants in the post-evolution.</p>
+</section>
 </section>
 <section id="d-researcher-degrees-of-freedom" class="level2">
 <h2 class="anchored" data-anchor-id="d-researcher-degrees-of-freedom">D: Researcher degrees of freedom</h2>
 <p>Note down all dimensions of researcher degrees of freedom that make the mapping of the hypothesis onto your data analysis vague. How many possible combinations can you think of?</p>
+<section id="my-approach-3" class="level3">
+<h3 class="anchored" data-anchor-id="my-approach-3">My approach</h3>
+<p>I will do this by taking the hypothesis as sections and judging those.</p>
+<blockquote class="blockquote">
+<p><em>The evolution stage of a Pokemon is reflected in aspects of its Japanese name</em></p>
+</blockquote>
+<p><em>The evolution stage</em> is vague as is. Mainly, what happens with Pokemon that cannot evolve? These can be interpreted as irrelevant (not part of an evolution stage), possibly joined with pre-evolution Pokemon (they have not evolved) or joined with the post-evolution Pokemon (they cannot evolve further). Looking at the Evolution column it gets worse. I have mentioned that some Pokemon seem to show wrong information about their ability to evolve. Furthermore, prior knowledge of Pokemon tells me that Pokemon can have more categories than are present in the dataset. at the very least we have:</p>
+<ol type="1">
+<li>Pokemon that do not evolve and have not evolved from anything</li>
+<li>Pokemon that can evolve and have not evolved from anything</li>
+<li>Pokemon that can evolve and have evolved from something</li>
+<li>Pokemon that cannot evolve and have evolved from something</li>
+</ol>
+<p><em>Pokemon</em> also lends itself to some vagueness here. Looking at the data set we have two different designations for these, namely <em>Official</em> (presumably a written official name) and <em>Elicited</em> (as by a naive speaker). This ties together with the wording <em>Japanese name</em>. A researcher can either join these as one group, or choose to focus on just one of them. While these are likely connected, they are not guaranteed to give the same outputs.</p>
+<p>Finally <em>aspect</em> is likely the most vague term. A name can have an almost infinite number of aspects, like intonation, stress, connotations to other words etc. Even within the given data set, a researcher can choose to look at length of name, any one of the output sounds individually or any number of combination and orderings of these. The number of combinations here is still astronomical and each of those combinations can be combined again with decisions made in relation to my previous paragraphs decisions.</p>
+<p>Importantly these choices are not trivial. While they might lead to similar conclusions, they just as well might not.</p>
+</section>
 </section>
 </section>
 <section id="references" class="level1">
